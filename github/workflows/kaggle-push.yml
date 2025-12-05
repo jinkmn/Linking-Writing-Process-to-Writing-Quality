@@ -1,0 +1,36 @@
+name: Upload to Kaggle Dataset
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - ".github/**" # Action設定自体の変更では発火させない（任意）
+      - "README.md"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install Kaggle API
+        run: pip install kaggle
+
+      - name: Upload to Kaggle
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          # .gitフォルダなどが含まれないように注意が必要ですが、
+          # kaggle cliはデフォルトで .git を無視します。
+          # -p . でカレントディレクトリをアップロード対象にします。
+          # --dir-mode zip でフォルダ構造を維持したままzip化してアップロードします。
+
+          kaggle datasets version -p . -m "Updated via GitHub Actions commit: ${GITHUB_SHA::7}" --dir-mode zip
